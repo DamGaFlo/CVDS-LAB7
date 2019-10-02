@@ -44,7 +44,7 @@ public class JDBCExample {
             con.setAutoCommit(false);
                  
             
-            System.out.println("Valor total pedido 1:"+valorTotalPedido(con, 1));
+            System.out.println("Valor total pedido 1: "+valorTotalPedido(con, 1));
             
             List<String> prodsPedido=nombresProductosPedido(con, 1);
             
@@ -81,9 +81,14 @@ public class JDBCExample {
      */
     public static void registrarNuevoProducto(Connection con, int codigo, String nombre,int precio) throws SQLException{
         //Crear preparedStatement
+        PreparedStatement nuevoProducto = con.prepareStatement("INSERT INTO ORD_PRODUCTOS(codigo,nombre,precio)"
+                                        + "VALUES(?,?,?)");
         //Asignar parámetros
+        nuevoProducto.setInt(1, codigo);
+        nuevoProducto.setString(2,nombre);
+        nuevoProducto.setInt(3, precio);
         //usar 'execute'
-
+        nuevoProducto.executeUpdate();
         
         con.commit();
         
@@ -101,16 +106,18 @@ public class JDBCExample {
         //Crear prepared statement
         PreparedStatement consultarNombresProducto = null;
         String consultaNombre = "SELECT DISTINCT nombre from ORD_DETALLE_PEDIDO,ORD_PRODUCTOS WHERE codigo = producto_fk AND pedido_fk = ?;";
+        
         try {
-            con.setAutoCommit(false);
             consultarNombresProducto = con.prepareStatement(consultaNombre);
             //asignar parámetros
             consultarNombresProducto.setInt(1,codigoPedido);
             //usar executeQuery
             ResultSet nombresProductos = consultarNombresProducto.executeQuery();
             //Sacar resultados del ResultSet
-            
             //Llenar la lista y retornarla
+            while (nombresProductos.next()){
+                np.add(nombresProductos.getString("nombre")); 
+            }
             
             
         }catch (SQLException e ){
@@ -120,11 +127,9 @@ public class JDBCExample {
                 consultarNombresProducto.close();
             }
 
-            con.setAutoCommit(true);
         }
    
 
-        
         return np;
     }
 
@@ -137,11 +142,24 @@ public class JDBCExample {
      */
     public static int valorTotalPedido(Connection con, int codigoPedido){
         
-        //Crear prepared statement
-        //asignar parámetros
-        //usar executeQuery
-        //Sacar resultado del ResultSet
-        
+        try {
+            //Crear prepared statement
+            String consultaValor = "SELECT SUM(dp.cantidad*pr.precio) as Valor "
+                                    + "FROM ORD_PEDIDOS pe, ORD_PRODUCTOS pr, ORD_DETALLE_PEDIDO dp "
+                                    + "WHERE pe.codigo = dp.pedido_fk AND pr.codigo = dp.producto_fk AND pe.codigo = ?;";
+            //asignar parámetros
+            PreparedStatement consultarValor = con.prepareStatement(consultaValor);
+            consultarValor.setInt(1,codigoPedido);            
+            //usar executeQuery            
+            ResultSet valorTotal = consultarValor.executeQuery();
+            //Sacar resultado del ResultSet
+            while (valorTotal.next()){
+                return valorTotal.getInt("Valor"); 
+            }
+            
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
         return 0;
     }
     
