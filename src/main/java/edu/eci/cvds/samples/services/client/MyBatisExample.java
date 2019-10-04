@@ -18,9 +18,18 @@ package edu.eci.cvds.samples.services.client;
 
 
 
+import edu.eci.cvds.sampleprj.dao.mybatis.mappers.ClienteMapper;
+import edu.eci.cvds.sampleprj.dao.mybatis.mappers.ItemMapper;
+import edu.eci.cvds.samples.entities.Item;
+import edu.eci.cvds.samples.entities.TipoItem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Date;
+import static javax.xml.bind.DatatypeConverter.parseDate;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -57,6 +66,13 @@ public class MyBatisExample {
      * @param args
      * @throws SQLException 
      */
+    public static Date parseDate(String date) {
+        try {
+            return new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
     public static void main(String args[]) throws SQLException {
         SqlSessionFactory sessionfact = getSqlSessionFactory();
 
@@ -66,9 +82,22 @@ public class MyBatisExample {
         //Crear el mapper y usarlo: 
         //ClienteMapper cm=sqlss.getMapper(ClienteMapper.class)
         //cm...
+        ClienteMapper cm = sqlss.getMapper(ClienteMapper.class);
+        System.out.println(cm.consultarClientes());
+        System.out.println("===========================================================================================================================");
+        System.out.println(cm.consultarCliente(4));
         
+        cm.agregarItemRentadoACliente(5, 1, parseDate("2019-03-12"), parseDate("2019-04-12"));
+
+        //item mapper punto 4
+        ItemMapper im= sqlss.getMapper(ItemMapper.class);
         
-        
+        //Item it = new Item(new TipoItem(3,"Peliculas"),2030,"aqui!!!!!!!","PERDIDO!!!!!!!!!!!!!",parseDate("2019-09-18"),3020, "","");
+        //im.insertarItem(it);
+        System.out.println("==============================================================================================================================");
+        System.out.println(im.consultarItems());
+        System.out.println("==============================================================================================================================");
+        System.out.println(im.consultarItem(2030));
         sqlss.commit();
         
         
